@@ -1,0 +1,627 @@
+<title>豐匯通 Demo</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600;700&family=Noto+Sans+TC:wght@400;500;700;900&display=swap">
+<style>
+/* Layout: corporate e-banking shell — charcoal nav rail, working canvas, AI co-pilot drawer; a guided-tour bar for judges along the bottom.
+   Single light theme by choice (corporate banking console), every color set explicitly. */
+:root{
+  color-scheme:light;
+  --brand:#E61E00; --brand-deep:#B51800; --brand-soft:#FDEBE6; --brand-line:#F6C4B8;
+  --ink:#1D2125; --ink-2:#3A4047; --muted:#646C75; --faint:#8A929B;
+  --line:#E2E5E9; --line-2:#D3D7DC; --bg:#F3F4F6; --surface:#FFFFFF; --sunk:#F7F8F9;
+  --rail:#1F2327; --rail-2:#2A2F34; --rail-ink:#C9CED4;
+  --risk:#A86400; --risk-soft:#FFF4E0; --safe:#16765A; --safe-soft:#E4F3EC; --info:#2F5E8C; --info-soft:#E8F0F8;
+  --sans:"IBM Plex Sans","Noto Sans TC","PingFang TC","Microsoft JhengHei",system-ui,sans-serif;
+  --tc:"Noto Sans TC","PingFang TC","Microsoft JhengHei",system-ui,sans-serif;
+  --mono:"IBM Plex Mono",ui-monospace,Menlo,monospace;
+  --r:10px;
+}
+*{box-sizing:border-box}
+html,body{height:100%}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:var(--sans);font-size:14px;line-height:1.55;
+  padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:14px 96px}
+button{font:inherit;color:inherit}
+.num{font-variant-numeric:tabular-nums}
+.mono{font-family:var(--mono)}
+
+.notice{max-width:1480px;margin:0 auto 10px;display:flex;flex-wrap:wrap;gap:6px 14px;align-items:center;font-size:12.5px;color:var(--muted)}
+.notice b{color:var(--ink);font-weight:600}
+.notice .pill{background:var(--surface);border:1px solid var(--line);border-radius:999px;padding:2px 10px}
+
+.app{max-width:1480px;margin:0 auto;display:grid;grid-template-columns:236px minmax(0,1fr) 352px;background:var(--surface);
+  border:1px solid var(--line-2);border-radius:14px;overflow:hidden;min-height:820px;box-shadow:0 30px 60px -40px rgba(20,24,28,.35)}
+.app.noai{grid-template-columns:236px minmax(0,1fr)}
+.app.noai .ai{display:none}
+
+/* rail */
+.rail{background:var(--rail);color:var(--rail-ink);display:flex;flex-direction:column;padding:20px 14px;gap:22px}
+.brand{display:flex;flex-direction:column;gap:2px;padding:0 8px}
+.brand .wm{font-family:var(--tc);font-weight:900;font-size:24px;color:#fff;letter-spacing:.04em;display:flex;align-items:center;gap:9px}
+.brand .wm i{width:10px;height:10px;background:var(--brand);border-radius:2px;transform:rotate(45deg);display:inline-block}
+.brand small{font-size:12px;color:#9AA1A9;letter-spacing:.06em}
+.nav{display:flex;flex-direction:column;gap:2px}
+.nav .grp{font-size:11px;letter-spacing:.12em;color:#7D858E;padding:12px 10px 6px}
+.nav button{all:unset;cursor:pointer;display:flex;align-items:center;gap:10px;padding:9px 10px;border-radius:8px;font-family:var(--tc);font-size:14px;color:var(--rail-ink)}
+.nav button:hover{background:var(--rail-2);color:#fff}
+.nav button[aria-current="page"]{background:var(--rail-2);color:#fff}
+.nav button[aria-current="page"] .ix{background:var(--brand);color:#fff;border-color:var(--brand)}
+.nav .ix{width:22px;height:22px;border-radius:6px;border:1px solid #444B53;display:grid;place-items:center;font-size:11px;font-family:var(--mono);flex:none}
+.nav .badge{margin-left:auto;background:var(--brand);color:#fff;font-size:11px;border-radius:999px;padding:0 7px;line-height:18px}
+.nav button:focus-visible,.btn:focus-visible,.chip-btn:focus-visible,.tab:focus-visible{outline:2px solid var(--brand);outline-offset:2px}
+.rail .acct{margin-top:auto;border-top:1px solid #33393F;padding:14px 8px 0;font-size:12px;color:#9AA1A9;display:flex;flex-direction:column;gap:3px}
+.rail .acct b{color:#fff;font-family:var(--tc);font-weight:500;font-size:13px}
+
+/* main */
+.main{display:flex;flex-direction:column;min-width:0;background:var(--bg)}
+.top{display:flex;align-items:center;gap:16px;padding:14px 26px;background:var(--surface);border-bottom:1px solid var(--line);flex-wrap:wrap}
+.crumb{font-size:12.5px;color:var(--muted)}
+.top h1{font-family:var(--tc);font-size:20px;font-weight:700;margin:0;line-height:1.2}
+.top .sp{margin-left:auto;display:flex;align-items:center;gap:14px;flex-wrap:wrap}
+.rate{display:flex;flex-direction:column;align-items:flex-end;font-size:11.5px;color:var(--muted);line-height:1.3}
+.rate b{font-family:var(--mono);font-size:15px;color:var(--ink);font-weight:500}
+.user{display:flex;align-items:center;gap:8px;font-size:13px;font-family:var(--tc)}
+.av{width:32px;height:32px;border-radius:50%;background:var(--ink-2);color:#fff;display:grid;place-items:center;font-weight:700;font-size:13px}
+.content{padding:22px 26px 30px;display:flex;flex-direction:column;gap:18px;min-width:0}
+
+.btn{appearance:none;border:1px solid transparent;border-radius:8px;padding:9px 16px;font-weight:600;cursor:pointer;font-family:var(--tc);font-size:14px;display:inline-flex;align-items:center;gap:8px;white-space:nowrap}
+.btn.pri{background:var(--brand);color:#fff}
+.btn.pri:hover{background:var(--brand-deep)}
+.btn.sec{background:var(--surface);border-color:var(--line-2);color:var(--ink)}
+.btn.sec:hover{border-color:var(--ink-2)}
+.btn.ghost{background:transparent;color:var(--brand-deep);padding:6px 4px}
+.btn[disabled]{background:var(--line);color:var(--faint);cursor:not-allowed}
+
+.card{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);padding:18px 20px;display:flex;flex-direction:column;gap:12px;min-width:0}
+.card h2{font-family:var(--tc);font-size:16px;font-weight:700;margin:0;display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.card h2 .sub{font-size:12.5px;font-weight:400;color:var(--muted)}
+.card .hd{display:flex;align-items:flex-start;justify-content:space-between;gap:12px;flex-wrap:wrap}
+
+.kpis{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:14px}
+.kpi{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);padding:16px 18px;display:flex;flex-direction:column;gap:6px;min-width:0}
+.kpi .k{font-size:12.5px;color:var(--muted);font-family:var(--tc)}
+.kpi .v{font-size:28px;font-weight:600;letter-spacing:-.01em;font-variant-numeric:tabular-nums;line-height:1.1}
+.kpi .v small{font-size:14px;font-weight:500;color:var(--muted);margin-left:4px}
+.kpi .f{font-size:12.5px;color:var(--muted)}
+.kpi.alert{border-color:var(--brand-line);background:linear-gradient(180deg,var(--brand-soft),var(--surface) 70%)}
+.kpi.alert .v{color:var(--brand-deep)}
+.risk{color:var(--risk)} .safe{color:var(--safe)}
+
+.grid2{display:grid;grid-template-columns:minmax(0,1.55fr) minmax(0,1fr);gap:18px}
+.grid3{display:grid;grid-template-columns:260px minmax(0,1.2fr) minmax(0,1fr);gap:18px}
+
+.tag{display:inline-flex;align-items:center;gap:5px;font-size:12px;border-radius:999px;padding:2px 9px;font-weight:500;white-space:nowrap;font-family:var(--tc)}
+.tag.ok{background:var(--safe-soft);color:var(--safe)}
+.tag.warn{background:var(--risk-soft);color:var(--risk)}
+.tag.wait{background:var(--sunk);color:var(--muted);border:1px solid var(--line)}
+.tag.red{background:var(--brand-soft);color:var(--brand-deep)}
+.tag.info{background:var(--info-soft);color:var(--info)}
+
+table.t{width:100%;border-collapse:collapse;font-size:13.5px}
+table.t th{font-weight:500;color:var(--muted);font-size:12px;text-align:left;padding:8px 10px;border-bottom:1px solid var(--line);white-space:nowrap;font-family:var(--tc)}
+table.t td{padding:11px 10px;border-bottom:1px solid var(--line);vertical-align:middle}
+table.t tr:last-child td{border-bottom:0}
+table.t .r{text-align:right;font-variant-numeric:tabular-nums;white-space:nowrap}
+table.t td.mono{white-space:nowrap}
+table.t td:first-child{min-width:7.5em}
+.tw{overflow-x:auto}
+
+.legend{display:flex;gap:14px;font-size:12px;color:var(--muted);flex-wrap:wrap}
+.legend i{display:inline-block;width:10px;height:10px;border-radius:2px;margin-right:5px;vertical-align:-1px}
+
+.ai-hint{display:flex;gap:12px;align-items:flex-start;border:1px solid var(--brand-line);background:var(--brand-soft);border-radius:var(--r);padding:14px 16px}
+.ai-hint .dot{width:30px;height:30px;border-radius:8px;background:var(--brand);color:#fff;display:grid;place-items:center;font-weight:700;font-size:12px;flex:none;font-family:var(--mono)}
+.ai-hint p{margin:0}
+.ai-hint .act{margin-left:auto;align-self:center}
+
+/* inbox */
+.inbox{display:flex;flex-direction:column;gap:6px}
+.mail{all:unset;cursor:pointer;display:flex;flex-direction:column;gap:2px;padding:11px 12px;border-radius:8px;border:1px solid var(--line);background:var(--surface)}
+.mail[aria-current="true"]{border-color:var(--brand);box-shadow:inset 3px 0 0 var(--brand)}
+.mail .fr{font-size:12px;color:var(--muted)}
+.mail b{font-family:var(--mono);font-size:13.5px;font-weight:500}
+.mail .row{display:flex;justify-content:space-between;align-items:center;gap:6px}
+
+/* PO document */
+.paper{background:#FCFCFA;border:1px solid var(--line-2);border-radius:6px;padding:26px 28px;font-family:"Times New Roman",Georgia,serif;color:#222;font-size:13px;line-height:1.6;box-shadow:0 1px 0 var(--line),0 12px 24px -20px rgba(0,0,0,.4);min-width:0}
+.paper .ph{display:flex;justify-content:space-between;border-bottom:2px solid #222;padding-bottom:8px;margin-bottom:12px;gap:10px;flex-wrap:wrap}
+.paper .ph b{font-size:18px;letter-spacing:.08em}
+.paper table{width:100%;border-collapse:collapse;margin:10px 0;font-size:12.5px}
+.paper td,.paper th{border:1px solid #bbb;padding:5px 7px;text-align:left}
+.hl{background:rgba(22,118,90,.13);border-bottom:2px solid var(--safe);padding:0 2px;border-radius:2px}
+.hl.low{background:rgba(168,100,0,.16);border-bottom-color:var(--risk)}
+.hl.on{outline:2px solid var(--brand);outline-offset:1px}
+
+.fields{display:flex;flex-direction:column}
+.field{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:2px 10px;padding:11px 0;border-bottom:1px solid var(--line);align-items:center}
+.field:last-child{border-bottom:0}
+.field .k{font-size:12px;color:var(--muted);font-family:var(--tc)}
+.field .v{font-weight:500}
+.field.low{background:var(--risk-soft);margin:0 -12px;padding:11px 12px;border-radius:8px;border-bottom:0}
+.conf{font-family:var(--mono);font-size:12px}
+
+/* slider */
+.ctl{display:flex;flex-direction:column;gap:8px}
+.ctl .row{display:flex;justify-content:space-between;align-items:baseline;gap:10px}
+.ctl .row b{font-family:var(--mono);font-size:16px}
+input[type=range]{width:100%;accent-color:var(--brand)}
+.ticks{display:flex;justify-content:space-between;font-size:11.5px;color:var(--faint);font-family:var(--mono)}
+
+.big{font-size:40px;font-weight:600;letter-spacing:-.02em;line-height:1;font-variant-numeric:tabular-nums}
+.note{font-size:12.5px;color:var(--muted)}
+.check{display:flex;gap:10px;align-items:flex-start;font-size:13.5px;font-family:var(--tc)}
+.check i{flex:none;width:18px;height:18px;border-radius:5px;display:grid;place-items:center;font-style:normal;font-size:11px;margin-top:2px}
+.check i.y{background:var(--safe);color:#fff}
+.check i.n{border:1.5px solid var(--risk);background:var(--surface)}
+
+.tl{display:flex;flex-direction:column}
+.tl .s{display:grid;grid-template-columns:28px minmax(0,1fr) auto;gap:12px;padding-bottom:18px;position:relative}
+.tl .s::before{content:"";position:absolute;left:13px;top:28px;bottom:2px;width:2px;background:var(--line)}
+.tl .s:last-child::before{display:none}
+.tl .s.done::before{background:var(--safe)}
+.tl .b{width:28px;height:28px;border-radius:50%;display:grid;place-items:center;font-size:12px;font-weight:700;background:var(--sunk);color:var(--muted);border:1px solid var(--line);z-index:1;font-family:var(--mono)}
+.tl .done .b{background:var(--safe);color:#fff;border-color:var(--safe)}
+.tl .now .b{background:var(--brand);color:#fff;border-color:var(--brand)}
+.tl .s strong{font-family:var(--tc);font-size:14.5px;display:block}
+.tl .s span.d{font-size:12.5px;color:var(--muted)}
+.tl .s .when{font-size:12px;color:var(--faint);font-family:var(--mono);white-space:nowrap}
+
+.rm{display:flex;gap:12px;align-items:center}
+.rm .av{background:var(--brand)}
+.msg{background:var(--sunk);border:1px solid var(--line);border-radius:10px;padding:10px 12px;font-size:13.5px;font-family:var(--tc)}
+
+.cmp{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.cmp>div{border:1px solid var(--line);border-radius:var(--r);padding:14px 16px;display:flex;flex-direction:column;gap:4px}
+.cmp .k{font-size:12.5px;color:var(--muted);font-family:var(--tc)}
+.cmp .v{font-size:22px;font-weight:600;font-variant-numeric:tabular-nums;white-space:nowrap}
+.cmp .hi{border-color:var(--safe);background:var(--safe-soft)}
+
+/* AI drawer */
+.ai{border-left:1px solid var(--line);display:flex;flex-direction:column;min-width:0;background:var(--surface)}
+.ai .ah{padding:16px 18px 0;display:flex;align-items:center;gap:10px}
+.ai .ah .mk{width:30px;height:30px;border-radius:8px;background:var(--brand);color:#fff;display:grid;place-items:center;font-weight:700;font-size:12px;font-family:var(--mono)}
+.ai .ah b{font-family:var(--tc);font-size:15px}
+.ai .ah small{display:block;font-size:11.5px;color:var(--safe)}
+.tabs{display:flex;gap:4px;padding:12px 18px 0;border-bottom:1px solid var(--line)}
+.tab{all:unset;cursor:pointer;padding:8px 10px;font-size:13px;font-family:var(--tc);color:var(--muted);border-bottom:2px solid transparent;margin-bottom:-1px}
+.tab[aria-selected="true"]{color:var(--ink);border-bottom-color:var(--brand);font-weight:600}
+.ai .body{flex:1;overflow:auto;padding:16px 18px;display:flex;flex-direction:column;gap:12px;max-height:640px}
+.bub{max-width:92%;padding:10px 12px;border-radius:12px;font-size:13.5px;font-family:var(--tc);line-height:1.6}
+.bub.ai{background:var(--sunk);border:1px solid var(--line);border-top-left-radius:4px;align-self:flex-start;display:block;width:auto}
+.bub.me{background:var(--ink);color:#fff;border-top-right-radius:4px;align-self:flex-end}
+.chips{display:flex;flex-wrap:wrap;gap:6px;padding:12px 18px 16px;border-top:1px solid var(--line)}
+.chip-btn{all:unset;cursor:pointer;border:1px solid var(--brand-line);color:var(--brand-deep);background:var(--surface);border-radius:999px;padding:5px 11px;font-size:12.5px;font-family:var(--tc)}
+.chip-btn:hover{background:var(--brand-soft)}
+.log{display:flex;flex-direction:column;gap:0}
+.log .e{display:grid;grid-template-columns:44px minmax(0,1fr);gap:10px;padding:9px 0;border-bottom:1px dashed var(--line);font-size:12.5px}
+.log .e .tm{font-family:var(--mono);color:var(--faint)}
+.log .e b{font-family:var(--tc);font-weight:600;font-size:12.5px;display:block}
+.log .e.gate b{color:var(--risk)}
+.log .e span{color:var(--ink-2);font-family:var(--tc)}
+
+/* tour */
+.tour{position:fixed;left:0;right:0;bottom:0;background:var(--rail);color:#fff;z-index:20;
+  padding:12px max(16px,env(safe-area-inset-right,0px)) calc(12px + env(safe-area-inset-bottom,0px)) max(16px,env(safe-area-inset-left,0px))}
+.tour .in{max-width:1480px;margin:0 auto;display:flex;align-items:center;gap:18px;flex-wrap:wrap}
+.tour .stp{font-family:var(--mono);font-size:12px;color:#fff;background:var(--brand);border-radius:6px;padding:3px 8px;white-space:nowrap}
+.tour .tx{flex:1;min-width:240px;font-family:var(--tc);font-size:13.5px;color:#D9DDE1}
+.tour .tx b{color:#fff;font-size:14.5px;margin-right:8px}
+.tour .btn.sec{background:transparent;color:#fff;border-color:#4A5158}
+.tour .bars{display:flex;gap:4px}
+.tour .bars i{width:22px;height:4px;border-radius:2px;background:#4A5158}
+.tour .bars i.on{background:var(--brand)}
+.toast{position:fixed;top:18px;left:50%;transform:translateX(-50%);background:var(--ink);color:#fff;padding:10px 16px;border-radius:8px;font-family:var(--tc);font-size:13.5px;z-index:30;box-shadow:0 10px 30px -10px rgba(0,0,0,.4)}
+
+@media (max-width:1240px){.app{grid-template-columns:220px minmax(0,1fr)}.app .ai{display:none}.app.aiopen .ai{display:flex;position:fixed;right:0;top:0;bottom:0;width:min(360px,100%);z-index:25;box-shadow:-20px 0 40px -20px rgba(0,0,0,.3)}.kpis{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media (max-width:980px){.grid2,.grid3{grid-template-columns:minmax(0,1fr)}}
+@media (max-width:760px){.app,.app.noai{grid-template-columns:minmax(0,1fr)}.rail{padding:14px}.nav{flex-direction:row;overflow-x:auto}.nav .grp{display:none}.rail .acct{display:none}.content{padding:16px}.top{padding:12px 16px}.cmp{grid-template-columns:1fr}.kpis{grid-template-columns:minmax(0,1fr)}}
+@media (prefers-reduced-motion:no-preference){.content>*{animation:rise .28s ease-out both}.content>*:nth-child(2){animation-delay:.04s}.content>*:nth-child(3){animation-delay:.08s}@keyframes rise{from{opacity:.55;transform:translateY(6px)}to{opacity:1;transform:none}}}
+</style>
+<style>
+:root{--ml:#3B5FC0;--ml-soft:#E9EEFB;--llm:#0F6B62;--llm-soft:#DDF0EC;--rule:#8A6D1D;--rule-soft:#F6EDD6;--hum:#B51800;--hum-soft:#FDEBE6}
+.ly{display:inline-block;font-size:10.5px;font-weight:700;border-radius:4px;padding:0 6px;line-height:17px;font-family:var(--tc);vertical-align:1px;white-space:nowrap}
+.ly.llm{background:var(--llm-soft);color:var(--llm)}.ly.ml{background:var(--ml-soft);color:var(--ml)}.ly.rule{background:var(--rule-soft);color:var(--rule)}.ly.hum{background:var(--hum-soft);color:var(--hum)}
+.layers{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:14px}
+.lay{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);padding:14px 16px;display:flex;flex-direction:column;gap:6px;min-width:0}
+.lay b{font-family:var(--tc);font-size:14.5px}.lay span.d{font-size:12.5px;color:var(--muted);font-family:var(--tc)}
+.pdrow{all:unset;cursor:pointer;display:grid;grid-template-columns:minmax(0,1fr) auto;gap:4px 12px;padding:12px 14px;border:1px solid var(--line);border-radius:8px;background:var(--surface)}
+.pdrow[aria-current="true"]{border-color:var(--ml);box-shadow:inset 3px 0 0 var(--ml)}
+.pdrow:focus-visible{outline:2px solid var(--brand);outline-offset:2px}
+.pdrow .id{font-family:var(--mono);font-size:13.5px;font-weight:500}
+.pdrow .by{font-size:12.5px;color:var(--muted)}
+.pdrow .pv{font-family:var(--mono);font-size:24px;font-weight:500;text-align:right;line-height:1.1}
+.pdrow .gauge{grid-column:1/-1}
+.gauge{position:relative;height:8px;border-radius:4px;border:1px solid var(--line);background:linear-gradient(90deg,var(--safe-soft) 0 33.33%,var(--risk-soft) 33.33% 66.66%,var(--brand-soft) 66.66% 100%)}
+.gauge i{position:absolute;top:-5px;width:4px;height:16px;background:var(--ink);border-radius:2px;transform:translateX(-50%)}
+.gscale{display:flex;justify-content:space-between;font-size:11px;color:var(--faint);font-family:var(--mono)}
+.sh{display:grid;grid-template-columns:minmax(0,1.6fr) minmax(90px,1fr) 48px;gap:10px;align-items:center;padding:7px 0;border-bottom:1px solid var(--line);font-size:13px;font-family:var(--tc)}
+.sh:last-child{border-bottom:0}
+.sh .tr{position:relative;height:14px;background:var(--sunk);border-radius:4px}
+.sh .ax{position:absolute;left:50%;top:-3px;bottom:-3px;width:1px;background:var(--line-2)}
+.sh .tr b{position:absolute;top:2px;bottom:2px;border-radius:2px}
+.sh .up{background:var(--brand)}.sh .dn{background:var(--safe)}
+.sh .v{text-align:right;font-size:12.5px}
+.flow{display:flex;align-items:center;gap:10px;flex-wrap:wrap;font-family:var(--tc);font-size:14px}
+.flow .big{font-size:30px}
+.nat{display:inline-block;width:10px;height:10px;border-radius:2px;margin-right:5px;vertical-align:-1px;background:repeating-linear-gradient(135deg,#C9CED4 0 3px,#E7EAED 3px 6px)}
+.log .e b .ly{margin-left:6px}
+@media (max-width:980px){.layers{grid-template-columns:minmax(0,1fr)}}
+</style>
+
+<div class="notice"><b>豐匯通｜出口訂單 AI 副駕</b><span class="pill">競賽概念 Demo</span><span>非永豐銀行官方服務，公司、訂單、匯率、買方付款風險分數與人員皆為示意資料</span></div>
+
+<div class="app" id="app">
+  <aside class="rail">
+    <div class="brand"><div class="wm"><i></i>豐匯通</div><small>EXPORT ORDER CO-PILOT</small></div>
+    <nav class="nav" id="nav" aria-label="主選單"></nav>
+    <div class="acct"><span>企業帳戶</span><b>宏昌精密機械股份有限公司</b><span>範例客戶｜台中工業區，機械零件出口</span></div>
+  </aside>
+  <main class="main">
+    <header class="top">
+      <div><div class="crumb" id="crumb"></div><h1 id="title"></h1></div>
+      <div class="sp">
+        <div class="rate">USD/TWD 即期（示意）<b>30.500</b></div>
+        <button class="btn sec" id="aiToggle" aria-pressed="true">AI 副駕</button>
+        <div class="user"><div class="av">陳</div><span>陳董事長<br><small style="color:var(--muted)">2026/10/15（四）</small></span></div>
+      </div>
+    </header>
+    <div class="content" id="page"></div>
+  </main>
+  <aside class="ai" id="ai" aria-label="AI 副駕">
+    <div class="ah"><div class="mk">AI</div><div><b>豐匯通 AI 副駕</b><small>● 協調 Agent 運作中，只提供建議，不會自動下單</small></div></div>
+    <div class="tabs" role="tablist"><button class="tab" role="tab" data-tab="chat" aria-selected="true">對話</button><button class="tab" role="tab" data-tab="log" aria-selected="false">Agent 工作紀錄</button></div>
+    <div class="body" id="aibody"></div>
+    <div class="chips" id="chips"></div>
+  </aside>
+</div>
+
+<div class="tour" id="tour"><div class="in">
+  <span class="stp" id="tstep"></span>
+  <div class="bars" id="tbars"></div>
+  <div class="tx" id="ttext"></div>
+  <button class="btn sec" id="tprev">上一步</button>
+  <button class="btn pri" id="tnext">下一步</button>
+</div></div>
+
+<script>
+const ORDERS=[
+ {id:"NL-2611",buyer:"Northline Tools Inc.",cty:"美國",amt:480000,cost:60000,item:"CNC 主軸外殼 1,200 件",en:"CNC spindle housing",qty:"1,200 pcs",ship:"2026-12-10",pay:"T/T 出貨後 60 天",col:"2027-02",due:"2027-02-08",conf:{buyer:99,amt:99,ship:98,col:96,pay:87},recv:"10/15 08:42",rr:.55,
+  fund:"預審通過，建議額度 NT$800 萬",why:"付款風險低，鎖匯比例可接近整體水準",
+  f:[["過去 5 筆交易全數準時",-3.4],["付款條件 60 天",.9],["買方財報評等 BBB（示意）",-1.6],["買方所在國與產業風險低",-.4],["本筆金額為歷史均值 1.8 倍",1.0]]},
+ {id:"PR-7730",buyer:"Prairie Supply LLC",cty:"美國",amt:260000,cost:30000,item:"齒輪箱組件 800 組",en:"Gearbox assembly",qty:"800 sets",ship:"2026-11-20",pay:"T/T 出貨後 45 天",col:"2027-01",due:"2027-01-05",conf:{buyer:99,amt:99,ship:99,col:97,pay:96},recv:"10/15 07:58",rr:.55,
+  fund:"本次未申請週轉金",why:"付款風險低，鎖匯比例可接近整體水準",
+  f:[["過去 3 筆交易全數準時",-2.6],["付款條件 45 天",.2],["買方財報評等 BB（示意）",-.2],["買方所在國與產業風險低",-.4],["本筆金額與歷史相近",-.1]]},
+ {id:"MX-0415",buyer:"Monterrey Herramientas",cty:"墨西哥",amt:150000,cost:20000,item:"精密夾治具 300 套",en:"Precision fixture",qty:"300 sets",ship:"2027-01-15",pay:"T/T 出貨後 60 天",col:"2027-03",due:"2027-03-16",conf:{buyer:98,amt:99,ship:97,col:95,pay:94},recv:"10/14 22:15",rr:.25,
+  fund:"不建議出貨前融資（首次交易）",why:"首次交易且付款風險較高，降低鎖匯比例，避免訂單變動時合約與收款不符",
+  f:[["首次交易，無歷史付款紀錄",6.2],["付款條件 60 天",.9],["無公開財報評等",3.1],["買方所在國風險中等",1.8],["本筆金額較小",-.5]]}
+];
+const BASE=8.0, SPOT=30.5, MARGIN=0.12, LINE=1200, REVIEW=20;
+const FWD={"2027-01":30.28,"2027-02":30.12,"2027-03":29.98};
+const net=o=>o.amt-o.cost;
+const GROSS=ORDERS.reduce((s,o)=>s+o.amt,0), COST=ORDERS.reduce((s,o)=>s+o.cost,0), NET=GROSS-COST;
+const GP=GROSS*SPOT*MARGIN;
+const pdOf=o=>BASE+o.f.reduce((s,x)=>s+x[1],0);
+const band=p=>p<10?["低","ok"]:p<REVIEW?["中","warn"]:["高","red"];
+const S={page:"home",move:1.0,hedge:50,confirmed:false,submitted:false,executed:false,settled:false,ai:true,tab:"chat",sel:"NL-2611",hl:null,chat:[],seen:{},log:[]};
+
+const usd=n=>"US$"+Math.round(n).toLocaleString("en-US");
+const wan=n=>(n/1e4).toLocaleString("zh-TW",{minimumFractionDigits:1,maximumFractionDigits:1});
+const byCol=()=>[...ORDERS].sort((a,b)=>a.col.localeCompare(b.col));
+const ratioOf=o=>Math.min(.8,o.rr*S.hedge/50);
+const lockOf=o=>Math.round(net(o)*ratioOf(o)/100)*100;
+const planUsd=()=>ORDERS.reduce((s,o)=>s+lockOf(o),0);
+const hedgedUsd=()=>S.executed?planUsd():0;
+const LAYER={"讀單 Agent":["llm","LLM"],"協調 Agent":["llm","LLM"],"建議 Agent":["llm","LLM"],"對帳 Agent":["llm","LLM"],"曝險試算引擎":["rule","規則"],"付款風險模型":["ml","機器學習"],"RM 王經理":["hum","人工"]};
+
+const PAGES=[
+ {id:"home",ix:"01",name:"總覽",crumb:"豐匯通 / 總覽",title:"出口匯率總覽"},
+ {id:"read",ix:"02",name:"訂單與讀單",crumb:"豐匯通 / 訂單與讀單",title:"AI 讀單結果"},
+ {id:"risk",ix:"03",name:"匯率曝險",crumb:"豐匯通 / 匯率曝險",title:"淨曝險試算"},
+ {id:"pd",ix:"04",name:"買方付款風險",crumb:"豐匯通 / 買方付款風險",title:"付款風險評分（機器學習）"},
+ {id:"plan",ix:"05",name:"避險與融資",crumb:"豐匯通 / 避險與融資",title:"AI 建議方案"},
+ {id:"prog",ix:"06",name:"執行進度",crumb:"豐匯通 / 執行進度",title:"RM 確認與執行"},
+ {id:"recon",ix:"07",name:"收匯對帳",crumb:"豐匯通 / 收匯對帳",title:"收匯自動對帳"}
+];
+const TOUR={
+ home:["企業主登入後即可掌握匯率風險",`系統收到轉寄的 3 張美元訂單，合計 ${usd(GROSS)}，扣除美元進貨後淨曝險 ${usd(NET)}。目前全部未避險，新台幣每升值 1 元，約少收 NT$${wan(NET)} 萬。`],
+ read:["生成式 AI 與 OCR 讀單，低信心欄位交由人工確認","5 個關鍵欄位附信心分數。付款條件僅 87%，系統在原文標示，待企業主確認後才進入試算。"],
+ risk:["以淨曝險呈現匯率影響","扣除以美元支付的原料進貨，只計算企業實際承擔的匯率風險。金額由規則程式計算，不交由語言模型處理。"],
+ pd:["機器學習預估買方付款風險","以 XGBoost 預估延遲付款機率，經校準並以 SHAP 說明原因。分數用於週轉金預審與避險比例建議。"],
+ plan:["建議僅為草案，只使用遠期外匯","依各訂單淨曝險與付款風險，分批建議鎖匯比例與出貨前週轉金。金額不超過訂單，須經 RM 確認適合度後方可成交。"],
+ prog:["人工關卡：RM 確認後才成交","建議送至 RM 工作台。RM 確認適合度、授信核准後才成交，企業主可全程查看進度。"],
+ recon:["收款自動對帳、交割與還款","買方匯款入帳時，自動比對訂單、交割遠期、償還週轉金，並計算該筆訂單實際的匯率損益。"]
+};
+
+function addLog(agent,text,gate){const d=new Date(2026,9,15,9,0+S.log.length*3);S.log.push({tm:String(d.getHours()).padStart(2,"0")+":"+String(d.getMinutes()).padStart(2,"0"),agent,text,gate:!!gate})}
+addLog("讀單 Agent","接收轉寄的 3 封訂單郵件附件，轉成 15 個結構化欄位");
+addLog("讀單 Agent","NL-2611 付款條件信心 87%，標記為待確認");
+addLog("協調 Agent",`彙整在手訂單 ${usd(GROSS)}，通知陳董事長`);
+
+/* ---------- charts ---------- */
+function expoChart(){
+ const W=520,H=250,L=50,R=10,T=24,B=42,rows=byCol(),max=500000;
+ const bw=(W-L-R)/rows.length, y=v=>T+(H-T-B)*(1-v/max);
+ let g=`<svg viewBox="0 0 ${W} ${H}" width="100%" role="img" aria-label="依收款月份的美元曝險"><defs><pattern id="nat" width="6" height="6" patternUnits="userSpaceOnUse" patternTransform="rotate(45)"><rect width="6" height="6" fill="#E7EAED"/><rect width="3" height="6" fill="#C9CED4"/></pattern></defs><g font-family="IBM Plex Mono, monospace" font-size="12" fill="#8A929B">`;
+ [0,100000,200000,300000,400000,500000].forEach(v=>{g+=`<line x1="${L}" x2="${W-R}" y1="${y(v)}" y2="${y(v)}" stroke="#E2E5E9"/><text x="${L-8}" y="${y(v)+4}" text-anchor="end">${v/1000}k</text>`});
+ g+=`</g>`;
+ rows.forEach((o,i)=>{const x=L+i*bw+bw*.28,w=bw*.44,hv=S.executed?lockOf(o):0,nt=net(o),uv=nt-hv;
+  if(hv>0)g+=`<rect x="${x}" y="${y(hv)}" width="${w}" height="${y(0)-y(hv)}" fill="#3A4047"><title>${o.id} 已鎖匯 ${usd(hv)}</title></rect>`;
+  g+=`<rect x="${x}" y="${y(hv+uv)}" width="${w}" height="${y(hv)-y(hv+uv)}" fill="#E61E00"><title>${o.id} 未避險淨曝險 ${usd(uv)}</title></rect>`;
+  g+=`<rect x="${x}" y="${y(o.amt)}" width="${w}" height="${y(nt)-y(o.amt)}" fill="url(#nat)" rx="2"><title>${o.id} 美元進貨（自然避險）${usd(o.cost)}</title></rect>`;
+  g+=`<text x="${x+w/2}" y="${y(o.amt)-7}" text-anchor="middle" font-family="IBM Plex Mono, monospace" font-size="13" font-weight="500" fill="#1D2125">${usd(o.amt)}</text>`;
+  g+=`<text x="${x+w/2}" y="${H-20}" text-anchor="middle" font-size="13" fill="#3A4047">${o.col}</text><text x="${x+w/2}" y="${H-5}" text-anchor="middle" font-size="11" fill="#8A929B" font-family="IBM Plex Mono, monospace">${o.id}</text>`});
+ return g+`</svg>`;
+}
+function sensChart(){
+ const W=520,H=260,L=52,R=30,T=18,B=34,maxX=2,maxY=180;
+ const x=v=>L+(W-L-R)*v/maxX, y=v=>T+(H-T-B)*(1-v/maxY);
+ const gr=v=>GROSS*v/1e4, un=v=>NET*v/1e4, he=v=>(NET-planUsd())*v/1e4;
+ let g=`<svg viewBox="0 0 ${W} ${H}" width="100%" role="img" aria-label="升值情境與少收金額"><g font-family="IBM Plex Mono, monospace" font-size="12" fill="#8A929B">`;
+ [0,45,90,135,180].forEach(v=>{g+=`<line x1="${L}" x2="${W-R}" y1="${y(v)}" y2="${y(v)}" stroke="#E2E5E9"/><text x="${L-8}" y="${y(v)+4}" text-anchor="end">${v}萬</text>`});
+ [0,0.5,1,1.5,2].forEach(v=>{g+=`<text x="${x(v)}" y="${H-12}" text-anchor="middle">+${v.toFixed(1)} 元</text>`});
+ g+=`</g>`;
+ g+=`<line x1="${x(0)}" y1="${y(0)}" x2="${x(2)}" y2="${y(gr(2))}" stroke="#8A929B" stroke-width="1.5" stroke-dasharray="2 4"/>`;
+ g+=`<line x1="${x(0)}" y1="${y(0)}" x2="${x(2)}" y2="${y(un(2))}" stroke="#A86400" stroke-width="2.5"/>`;
+ g+=`<line x1="${x(0)}" y1="${y(0)}" x2="${x(2)}" y2="${y(he(2))}" stroke="#16765A" stroke-width="2.5" stroke-dasharray="6 5"/>`;
+ g+=`<line x1="${x(S.move)}" x2="${x(S.move)}" y1="${T}" y2="${y(0)}" stroke="#E61E00" stroke-width="1"/>`;
+ g+=`<circle cx="${x(S.move)}" cy="${y(un(S.move))}" r="5" fill="#A86400"/><circle cx="${x(S.move)}" cy="${y(he(S.move))}" r="5" fill="#16765A"/>`;
+ g+=`<text x="${Math.min(x(S.move)+8,W-190)}" y="${y(un(S.move))+18}" font-size="13" fill="#A86400" font-family="IBM Plex Mono, monospace">未避險 −${wan(NET*S.move)} 萬</text>`;
+ g+=`<text x="${Math.min(x(S.move)+8,W-190)}" y="${y(he(S.move))+18}" font-size="13" fill="#16765A" font-family="IBM Plex Mono, monospace">建議方案 −${wan((NET-planUsd())*S.move)} 萬</text>`;
+ return g+`</svg>`;
+}
+
+/* ---------- pages ---------- */
+function kpis(){
+ const hu=hedgedUsd(),un=NET-hu;
+ return `<div class="kpis">
+ <div class="kpi"><div class="k">在手美元訂單</div><div class="v">${usd(GROSS)}</div><div class="f">3 張訂單，收款期 2027/01 至 03</div></div>
+ <div class="kpi alert"><div class="k">未避險淨曝險</div><div class="v">${usd(un)}</div><div class="f">${hu?`已鎖匯 ${(hu/NET*100).toFixed(0)}%`:`已扣除美元進貨 ${usd(COST)}，全部未避險`}</div></div>
+ <div class="kpi"><div class="k">新台幣每升值 1 元</div><div class="v risk">−${wan(un)}<small>萬元</small></div><div class="f">約占這批訂單毛利 ${(un/GP*100).toFixed(0)}%</div></div>
+ <div class="kpi"><div class="k">出口週轉額度（示意）</div><div class="v">${(S.executed?LINE-800:LINE).toLocaleString("en-US")}<small>萬元可用</small></div><div class="f">${S.executed?"NL-2611 已動用 800 萬":"核定額度 1,200 萬元"}</div></div>
+ </div>`;
+}
+const P={};
+P.home=()=>`
+ ${!S.confirmed?`<div class="ai-hint"><div class="dot">AI</div><div><b>早安，陳董事長。</b>今天收到 3 張轉寄的美元訂單，合計 ${usd(GROSS)}。其中 NL-2611 的付款條件需要您確認一個欄位。</div><div class="act"><button class="btn pri" data-go="read">確認訂單</button></div></div>`:
+ !S.submitted?`<div class="ai-hint"><div class="dot">AI</div><div>訂單已確認。淨曝險與買方付款風險都已算好，我也整理了分批鎖匯與週轉金的草案，請您過目。</div><div class="act"><button class="btn pri" data-go="plan">查看建議</button></div></div>`:
+ `<div class="ai-hint"><div class="dot">AI</div><div>${S.executed?"遠期外匯已成交，週轉金已撥款。收到貨款時我會自動對帳。":"方案已送給王經理，等待 RM 確認適合度。"}</div><div class="act"><button class="btn sec" data-go="${S.executed?"recon":"prog"}">查看進度</button></div></div>`}
+ ${kpis()}
+ <div class="layers">
+  <div class="lay"><div><span class="ly llm">LLM</span></div><b>語言模型：讀與說</b><span class="d">已讀取 3 份訂單並轉成 15 個欄位，以易懂的說明呈現結果。</span></div>
+  <div class="lay"><div><span class="ly ml">機器學習</span></div><b>機器學習：估風險</b><span class="d">已為 3 位買方評分，最高為 MX-0415 的 ${pdOf(ORDERS[2]).toFixed(1)}%。</span></div>
+  <div class="lay"><div><span class="ly rule">規則</span></div><b>規則引擎：算帳與合規</b><span class="d">淨曝險、損益與鎖匯上限皆由程式依規則計算，不交由語言模型。</span></div>
+ </div>
+ <div class="grid2">
+  <section class="card"><div class="hd"><h2>依收款月份的美元曝險 <span class="sub">由 AI 依訂單付款條件推算</span></h2><div class="legend"><span><i style="background:#E61E00"></i>未避險淨曝險</span><span><i style="background:#3A4047"></i>已鎖匯</span><span><span class="nat"></span>美元進貨</span></div></div>${expoChart()}</section>
+  <section class="card"><h2>待辦事項</h2>
+   <div class="fields">
+    <div class="field"><div><div class="v">確認 NL-2611 付款條件</div><div class="k">讀單信心 87%</div></div>${S.confirmed?'<span class="tag ok">已完成</span>':'<span class="tag warn">待處理</span>'}</div>
+    <div class="field"><div><div class="v">留意 MX-0415 付款風險</div><div class="k">首次交易，預估 ${pdOf(ORDERS[2]).toFixed(1)}%，接近 ${REVIEW}% 複核門檻</div></div><span class="tag warn">1 筆留意</span></div>
+    <div class="field"><div><div class="v">檢視避險與週轉金建議</div><div class="k">分 3 批遠期外匯，另有出貨前週轉金</div></div>${S.submitted?'<span class="tag ok">已送出</span>':'<span class="tag wait">尚未開始</span>'}</div>
+    <div class="field"><div><div class="v">RM 適合度確認</div><div class="k">負責 RM：王經理（範例）</div></div>${S.executed?'<span class="tag ok">已確認</span>':S.submitted?'<span class="tag info">審核中</span>':'<span class="tag wait">尚未開始</span>'}</div>
+    <div class="field"><div><div class="v">NL-2611 收匯對帳</div><div class="k">預計 2027-02-08</div></div>${S.settled?'<span class="tag ok">已完成</span>':'<span class="tag wait">未到期</span>'}</div>
+   </div></section>
+ </div>
+ <section class="card"><div class="hd"><h2>在手訂單</h2><button class="btn ghost" data-go="read">看讀單結果 →</button></div>
+  <div class="tw"><table class="t"><thead><tr><th>訂單</th><th>買方</th><th>品項</th><th class="r">金額</th><th>出貨</th><th>預計收款</th><th>狀態</th></tr></thead><tbody>
+  ${ORDERS.map(o=>`<tr><td class="mono">${o.id}</td><td>${o.buyer}<br><small style="color:var(--muted)">${o.cty}</small></td><td>${o.item}</td><td class="r mono">${usd(o.amt)}</td><td class="mono">${o.ship}</td><td class="mono">${o.due}</td><td>${o.id==="NL-2611"&&!S.confirmed?'<span class="tag warn">1 欄待確認</span>':S.executed?`<span class="tag ok">已鎖匯 ${(ratioOf(o)*100).toFixed(0)}%</span>`:'<span class="tag red">未避險</span>'}</td></tr>`).join("")}
+  </tbody></table></div></section>`;
+
+P.read=()=>{const o=ORDERS.find(x=>x.id===S.sel);const low=o.id==="NL-2611"&&!S.confirmed;
+ const f=[["buyer","買方",o.buyer+"（"+o.cty+"）"],["amt","幣別與金額",usd(o.amt)],["ship","交期",o.ship],["pay","付款條件",o.pay],["col","預計收款",o.due]];
+ return `<div class="grid3">
+ <section class="card"><h2>轉寄訂單 <span class="sub">DA BOSS 專屬收件匣</span></h2><div class="inbox">
+  ${ORDERS.map(x=>`<button class="mail" data-sel="${x.id}" aria-current="${x.id===S.sel}"><div class="row"><b>${x.id}</b>${x.id==="NL-2611"&&!S.confirmed?'<span class="tag warn">待確認</span>':'<span class="tag ok">已讀取</span>'}</div><span>${x.buyer}</span><div class="row"><span class="fr">${x.recv}</span><span class="mono" style="font-size:12.5px">${usd(x.amt)}</span></div></button>`).join("")}
+ </div><p class="note" style="margin:0">只處理您主動轉寄或上傳的訂單與附件，不連接您的信箱，可隨時撤回授權。</p></section>
+ <section class="card"><div class="hd"><h2>原始文件 <span class="sub mono">PO_${o.id}.pdf</span></h2><span class="tag info">OCR＋生成式 AI</span></div>
+  <div class="paper">
+   <div class="ph"><b>PURCHASE ORDER</b><span>No. <span class="hl ${S.hl==='buyer'?'on':''}">${o.id}</span><br>Date: Oct 14, 2026</span></div>
+   <div>Buyer: <span class="hl ${S.hl==='buyer'?'on':''}">${o.buyer}</span>, ${o.cty==="美國"?"Ohio, USA":o.cty==="墨西哥"?"Nuevo León, Mexico":""}<br>Supplier: Hung Chang Precision Machinery Co., Ltd. (sample)</div>
+   <table><tr><th>Item</th><th>Qty</th><th>Unit price</th><th>Amount</th></tr><tr><td>${o.en}</td><td>${o.qty}</td><td>USD ${(o.amt/parseInt(o.qty.replace(/,/g,""))).toFixed(2)}</td><td><span class="hl ${S.hl==='amt'?'on':''}">USD ${o.amt.toLocaleString("en-US")}.00</span></td></tr></table>
+   Delivery: <span class="hl ${S.hl==='ship'?'on':''}">${new Date(o.ship).toLocaleDateString("en-US",{month:"short",day:"numeric",year:"numeric"})}</span>, FOB Keelung<br>
+   Payment: <span class="hl ${o.conf.pay<90&&low?'low':''} ${S.hl==='pay'||S.hl==='col'?'on':''}">T/T ${o.pay.match(/\d+/)[0]} days after B/L date</span>${o.id==="NL-2611"?", 30% deposit waived.":"."}<br>
+   <span style="color:#666">Authorized signature ____________</span>
+  </div></section>
+ <section class="card"><div class="hd"><h2>讀出的欄位</h2>${low?'<span class="tag warn">1 欄待確認</span>':'<span class="tag ok">全部確認</span>'}</div>
+  <div class="fields">${f.map(([k,l,v])=>{const c=o.conf[k];const isLow=low&&k==="pay";return `<div class="field ${isLow?'low':''}" data-hl="${k}"><div><div class="k">${l}</div><div class="v ${k==='amt'?'mono':''}">${v}</div></div><span class="conf ${c<90&&isLow?'risk':'safe'}">信心 ${c}%</span></div>`}).join("")}</div>
+  ${low?`<div class="note">原文以「提單日（B/L date）」起算。若 12/10 出貨並取得提單，預計 2027-02-08 收款。</div><button class="btn pri" data-act="confirm">確認無誤</button>`:`<button class="btn pri" data-go="risk">下一步：試算匯率影響</button>`}
+  <p class="note" style="margin:0">金額由規則程式驗算，並與電子發票、報關資料交叉比對。</p>
+ </section></div>`};
+
+P.risk=()=>{const un=NET-planUsd(),loss=NET*S.move,lossH=un*S.move,grossLoss=GROSS*S.move;
+ return `${kpis()}<div class="grid2">
+ <section class="card"><div class="hd"><h2>升值情境與少收金額 <span class="sub">淨曝險 ${usd(NET)}</span></h2><div class="legend"><span><i style="background:#8A929B"></i>訂單全額（上限）</span><span><i style="background:#A86400"></i>淨曝險未避險</span><span><i style="background:#16765A"></i>建議方案（鎖匯 ${S.hedge}%）</span></div></div>
+  ${sensChart()}
+  <div class="ctl"><div class="row"><label for="move">新台幣升值情境</label><b>+${S.move.toFixed(1)} 元</b></div><input id="move" type="range" min="0" max="2" step="0.1" value="${S.move}"><div class="ticks"><span>0</span><span>0.5</span><span>1.0</span><span>1.5</span><span>2.0 元</span></div></div>
+ </section>
+ <section class="card"><h2>風險摘要 <span class="ly rule">規則</span></h2>
+  <div><div class="note">如果新台幣升值 ${S.move.toFixed(1)} 元，扣除美元進貨後，這批訂單少收</div><div class="big risk">−NT$ ${wan(loss)} 萬</div></div>
+  <div class="cmp"><div><span class="k">占這批訂單毛利</span><span class="v risk">${(loss/GP*100).toFixed(0)}%</span><span class="note">毛利率以 12% 計</span></div><div class="hi"><span class="k">若依建議鎖匯 ${S.hedge}%</span><span class="v safe">−${wan(lossH)} 萬</span><span class="note">少收金額減少 ${((1-lossH/loss)*100).toFixed(0)}%</span></div></div>
+  <p class="note" style="margin:0">若以訂單全額計算（曝險上限），升值 ${S.move.toFixed(1)} 元少收 ${wan(grossLoss)} 萬，約占毛利 ${(grossLoss/GP*100).toFixed(0)}%。</p>
+  <p class="note" style="margin:0">參考：2025/5/2 新台幣盤中升值 1.247 元，收盤升值 0.953 元，為 2002 年以來最大單日升幅。本頁只呈現情境，不預測匯率。</p>
+  <button class="btn pri" data-go="pd">下一步：買方付款風險</button>
+ </section></div>
+ <section class="card"><h2>各訂單淨曝險</h2><div class="tw"><table class="t"><thead><tr><th>訂單</th><th>預計收款</th><th class="r">訂單金額</th><th class="r">美元進貨</th><th class="r">淨曝險</th><th class="r">升值 ${S.move.toFixed(1)} 元後少收</th></tr></thead><tbody>
+ ${byCol().map(o=>`<tr><td class="mono">${o.id}</td><td class="mono">${o.due}</td><td class="r mono">${usd(o.amt)}</td><td class="r mono">−${usd(o.cost)}</td><td class="r mono">${usd(net(o))}</td><td class="r mono risk">−${wan(net(o)*S.move)} 萬</td></tr>`).join("")}
+ <tr><td colspan="2"><b>合計</b></td><td class="r mono"><b>${usd(GROSS)}</b></td><td class="r mono"><b>−${usd(COST)}</b></td><td class="r mono"><b>${usd(NET)}</b></td><td class="r mono risk"><b>−${wan(loss)} 萬</b></td></tr>
+ </tbody></table></div><p class="note" style="margin:0">企業以美元支付的原料進貨，與美元收入互相抵銷，屬自然避險，因此只對淨曝險建議鎖匯。</p></section>`};
+
+P.pd=()=>{const o=ORDERS.find(x=>x.id===S.sel),p=pdOf(o),mx=Math.max(...o.f.map(x=>Math.abs(x[1])));
+ return `<div class="ai-hint"><div class="dot">ML</div><div>機器學習模型以 XGBoost 預估每位買方延遲付款 30 天以上或取消訂單的機率，經機率校準，並以 SHAP 說明原因。<b>分數用於週轉金預審與避險比例建議，不會單獨決定核准。</b></div></div>
+ <div class="grid2">
+ <section class="card"><div class="hd"><h2>買方付款風險 <span class="ly ml">機器學習</span></h2><span class="tag info">示意分數</span></div>
+  <div class="inbox">${ORDERS.map(x=>{const v=pdOf(x),b=band(v);return `<button class="pdrow" data-sel="${x.id}" aria-current="${x.id===S.sel}"><div><span class="id">${x.id}</span> <span class="tag ${b[1]}">${b[0]}風險</span><div class="by">${x.buyer}（${x.cty}）</div></div><div class="pv ${b[1]==='ok'?'safe':b[1]==='warn'?'risk':''}">${v.toFixed(1)}%</div><div class="gauge" role="img" aria-label="付款風險 ${v.toFixed(1)}%，區間 0 至 30%"><i style="left:${Math.min(v,30)/30*100}%"></i></div></button>`}).join("")}</div>
+  <div class="gscale"><span>0%</span><span>10%</span><span>20% 複核門檻</span><span>30%</span></div>
+  <p class="note" style="margin:0">風險區間：低於 10% 為低，10% 至 20% 為中，20% 以上為高，須由 RM 複核。經校準後，預測 20% 代表歷史上約每 5 筆有 1 筆延遲。</p>
+ </section>
+ <section class="card"><div class="hd"><h2>影響因素（SHAP） <span class="sub mono">${o.id}</span></h2></div>
+  <div class="flow"><span>基準 <b class="mono">${BASE.toFixed(1)}%</b></span><span>→</span><span>本筆 <b class="mono ${band(p)[1]==='ok'?'safe':'risk'}">${p.toFixed(1)}%</b></span></div>
+  <div>${o.f.map(([l,d])=>`<div class="sh"><span>${l}</span><div class="tr"><i class="ax"></i><b class="${d>0?'up':'dn'}" style="${d>0?`left:50%;width:${Math.abs(d)/mx*50}%`:`right:50%;width:${Math.abs(d)/mx*50}%`}"></b></div><span class="v ${d>0?'risk':'safe'}">${d>0?'+':'−'}${Math.abs(d).toFixed(1)}</span></div>`).join("")}</div>
+  <p class="note" style="margin:0">紅色拉高風險，綠色降低風險，單位為百分點。</p>
+ </section></div>
+ <section class="card"><div class="hd"><h2>模型如何影響建議</h2><button class="btn ghost" data-go="plan">看避險建議 →</button></div>
+  <div class="tw"><table class="t"><thead><tr><th>訂單</th><th class="r">淨曝險</th><th class="r">付款風險</th><th class="r">建議鎖匯比例</th><th>週轉金預審</th><th>理由</th></tr></thead><tbody>
+  ${byCol().map(x=>`<tr><td class="mono">${x.id}</td><td class="r mono">${usd(net(x))}</td><td class="r mono">${pdOf(x).toFixed(1)}%</td><td class="r mono">${(ratioOf(x)*100).toFixed(0)}%</td><td>${x.fund}</td><td>${x.why}</td></tr>`).join("")}
+  </tbody></table></div>
+  <p class="note" style="margin:0">避險比例採成本敏感方式，權衡遠期成本與未避險的潛在損失。付款風險越高，訂單越可能延遲或取消，鎖匯比例就越低。</p>
+ </section>
+ <section class="card"><h2>模型資訊與驗證計畫</h2><div class="fields">
+  <div class="field"><div><div class="k">演算法</div><div class="v">XGBoost，並以等滲迴歸校準機率</div></div></div>
+  <div class="field"><div><div class="k">訓練資料</div><div class="v">行內歷史訂單、收款與逾期紀錄（PoC 階段以歷史資料驗證）</div></div></div>
+  <div class="field"><div><div class="k">驗證目標</div><div class="v">ROC-AUC ≥ 0.75，校準後誤差 ECE ≤ 0.02</div></div></div>
+  <div class="field"><div><div class="k">上線後監控</div><div class="v">每季以 PSI 監控特徵漂移，並檢視 SHAP 主要影響因素</div></div></div>
+ </div><p class="note" style="margin:0">本頁分數為示意資料，模型尚未以行內資料訓練。</p></section>`};
+
+P.plan=()=>{const rows=byCol(),lock=rows.map(o=>({...o,lk:lockOf(o),rt:ratioOf(o)}));const sum=planUsd();
+ const fwdVal=lock.reduce((s,o)=>s+o.lk*FWD[o.col],0);
+ return `<div class="ai-hint"><div class="dot">AI</div><div>建議依收款月份分 3 筆遠期外匯，整體約鎖 ${S.hedge}% 的淨曝險。付款風險較高的 MX-0415 鎖定比例較低，鎖匯金額不會超過淨曝險。<b>這是草案，送 RM 確認後才會成交。</b></div></div>
+ <section class="card"><div class="hd"><h2>遠期外匯（賣出美元） <span class="ly ml">機器學習</span><span class="ly llm">LLM</span></h2><span class="tag ${S.submitted?'info':'wait'}">${S.executed?'已成交':S.submitted?'RM 確認中':'草案'}</span></div>
+  <div class="ctl"><div class="row"><label for="hedge">整體鎖匯比例</label><b>${S.hedge}%</b></div><input id="hedge" type="range" min="0" max="80" step="10" value="${S.hedge}" ${S.submitted?'disabled':''}><div class="ticks"><span>0%</span><span>20%</span><span>40%</span><span>60%</span><span>80% 上限</span></div></div>
+  <div class="tw"><table class="t"><thead><tr><th>對應訂單</th><th class="r">淨曝險</th><th class="r">付款風險</th><th class="r">鎖匯比例</th><th class="r">賣出金額</th><th class="r">遠期匯率（示意）</th><th class="r">鎖定新台幣</th></tr></thead><tbody>
+  ${lock.map(o=>`<tr><td class="mono">${o.id}<br><small style="color:var(--muted)">到期 ${o.due}</small></td><td class="r mono">${usd(net(o))}</td><td class="r mono">${pdOf(o).toFixed(1)}%</td><td class="r mono">${(o.rt*100).toFixed(0)}%</td><td class="r mono">${usd(o.lk)}</td><td class="r mono">${FWD[o.col].toFixed(2)}</td><td class="r mono">${wan(o.lk*FWD[o.col])} 萬</td></tr>`).join("")}
+  <tr><td><b>合計</b></td><td class="r mono"><b>${usd(NET)}</b></td><td></td><td class="r mono"><b>${(sum/NET*100).toFixed(0)}%</b></td><td class="r mono"><b>${usd(sum)}</b></td><td></td><td class="r mono"><b>${wan(fwdVal)} 萬</b></td></tr></tbody></table></div>
+ </section>
+ <div class="grid2">
+ <section class="card"><h2>出貨前週轉金</h2>
+  <div class="fields">
+   <div class="field"><div><div class="k">用途</div><div class="v">NL-2611 備料與工資</div></div></div>
+   <div class="field"><div><div class="k">付款風險預審</div><div class="v">${pdOf(ORDERS[0]).toFixed(1)}%（${band(pdOf(ORDERS[0]))[0]}風險），${ORDERS[0].fund}</div></div><span class="tag ok">通過</span></div>
+   <div class="field"><div><div class="k">建議額度</div><div class="v mono">NT$ 800 萬</div></div><span class="tag wait">待授信核准</span></div>
+   <div class="field"><div><div class="k">還款來源</div><div class="v">NL-2611 貨款（2027-02-08）自動沖銷</div></div></div>
+   <div class="field"><div><div class="k">信用保證</div><div class="v">可搭配信保基金出口貸款保證（依當期辦法）</div></div><span class="tag ok">符合</span></div>
+  </div>
+ </section>
+ <section class="card"><h2>送出前檢查</h2>
+  <div class="check"><i class="y">✓</i>只使用遠期外匯，不含 TRF 等複雜衍生性商品</div>
+  <div class="check"><i class="y">✓</i>每筆鎖匯金額不超過對應訂單的淨曝險，訂單即為外匯交易的實需佐證</div>
+  <div class="check"><i class="y">✓</i>3 筆訂單的付款風險皆低於 ${REVIEW}% 複核門檻，MX-0415 列入 RM 留意清單</div>
+  <div class="check"><i class="y">✓</i>週轉金額度在核定額度內</div>
+  <div class="check"><i class="${S.executed?'y':'n'}">${S.executed?'✓':''}</i>RM 確認適合度與授信核准（送出後由王經理進行）</div>
+  <div style="display:flex;gap:10px;flex-wrap:wrap">${S.submitted?`<button class="btn sec" data-go="prog">查看執行進度 →</button>`:`<button class="btn pri" data-act="submit">送給 RM 確認</button><button class="btn sec" data-go="pd">回到付款風險</button>`}</div>
+ </section></div>`};
+
+P.prog=()=>{const st=(c,n)=>c?'done':n?'now':'';const pct=(planUsd()/NET*100).toFixed(0);
+ const steps=[
+  [true,false,"方案已送出",`鎖匯 ${pct}%，共 3 筆遠期外匯，另有週轉金 NT$800 萬`,"10/15 10:12"],
+  [S.executed,!S.executed,"RM 確認適合度","王經理確認您了解遠期外匯的權利義務",S.executed?"10/15 14:40":"進行中"],
+  [S.executed,false,"遠期外匯成交","3 筆，分別於 2027-01、02、03 到期",S.executed?"10/15 14:52":""],
+  [S.executed,false,"週轉金撥款","NT$800 萬撥入活存帳戶",S.executed?"10/16 09:30":""],
+  [S.settled,S.executed&&!S.settled,"NL-2611 出貨與收匯","預計 2026-12-10 出貨，2027-02-08 收款",S.settled?"2027-02-08":""],
+ ];
+ return `<div class="grid2">
+ <section class="card"><h2>執行進度</h2><div class="tl">${steps.map((s,i)=>`<div class="s ${st(s[0],s[1])}"><div class="b">${s[0]?'✓':i+1}</div><div><strong>${s[2]}</strong><span class="d">${s[3]}</span></div><span class="when">${s[4]}</span></div>`).join("")}</div>
+  ${!S.executed?`<button class="btn pri" data-act="rm">模擬：RM 完成確認</button>`:!S.settled?`<button class="btn pri" data-act="settle">模擬：2027-02-08 收到 NL-2611 貨款</button>`:`<button class="btn sec" data-go="recon">查看對帳結果 →</button>`}
+ </section>
+ <section class="card"><h2>負責 RM <span class="ly hum">人工關卡</span></h2>
+  <div class="rm"><div class="av">王</div><div><b style="font-family:var(--tc)">王經理（範例）</b><div class="note">企業金融部，外匯與授信</div></div></div>
+  <div class="msg">${S.executed?"陳董您好，遠期外匯 3 筆已成交，週轉金明早撥款。之後收款時系統會自動對帳，有異常我會再聯絡您。":"陳董您好，已收到豐匯通送來的方案。下午我會致電確認遠期外匯的權利義務，確認後即可成交。"}</div>
+  <p class="note" style="margin:0">RM 工作台會同時收到 AI 整理好的訂單、淨曝險、付款風險分數與額度資料，不需要請客戶重複填寫。</p>
+ </section></div>`};
+
+P.recon=()=>{const o=ORDERS[0],h=lockOf(o),nt=net(o),spotAt=29.40,fwd=FWD[o.col];
+ if(!S.settled)return `<section class="card"><h2>尚未收到貨款</h2><p style="margin:0">NL-2611 預計 2027-02-08 收款。可以在「執行進度」模擬收款，查看自動對帳的結果。</p><div><button class="btn pri" data-go="prog">前往執行進度</button></div></section>`;
+ const actual=h*fwd+(nt-h)*spotAt, unh=nt*spotAt, quote=nt*SPOT;
+ return `<div class="ai-hint"><div class="dot">AI</div><div>收到 ${usd(o.amt)}，已對上訂單 NL-2611，並完成交割與還款。<b>這筆訂單因為鎖匯，比完全不避險多收 NT$${wan(actual-unh)} 萬。</b></div></div>
+ <div class="grid2">
+ <section class="card"><div class="hd"><h2>入帳與自動處理 <span class="ly llm">LLM</span><span class="ly rule">規則</span></h2><span class="tag ok">比對相符 100%</span></div>
+  <div class="tw"><table class="t"><thead><tr><th>項目</th><th class="r">金額</th><th class="r">匯率（示意）</th><th class="r">新台幣</th><th>狀態</th></tr></thead><tbody>
+   <tr><td>匯入匯款<br><small style="color:var(--muted)">Northline Tools Inc.，Ref NL-2611</small></td><td class="r mono">${usd(o.amt)}</td><td></td><td></td><td><span class="tag ok">已入帳</span></td></tr>
+   <tr><td>保留美元支付原料</td><td class="r mono">${usd(o.cost)}</td><td></td><td></td><td><span class="tag ok">自然避險</span></td></tr>
+   <tr><td>交割遠期外匯</td><td class="r mono">${usd(h)}</td><td class="r mono">${fwd.toFixed(2)}</td><td class="r mono">${wan(h*fwd)} 萬</td><td><span class="tag ok">完成</span></td></tr>
+   <tr><td>剩餘部分即期結匯</td><td class="r mono">${usd(nt-h)}</td><td class="r mono">${spotAt.toFixed(2)}</td><td class="r mono">${wan((nt-h)*spotAt)} 萬</td><td><span class="tag ok">完成</span></td></tr>
+   <tr><td>償還出貨前週轉金</td><td></td><td></td><td class="r mono">−800.0 萬</td><td><span class="tag ok">完成</span></td></tr>
+  </tbody></table></div>
+  <p class="note" style="margin:0">人工對帳時間：0 分鐘。若金額或參考號碼不符，會轉給 RM 人工處理。</p>
+ </section>
+ <section class="card"><h2>這筆訂單的匯率成績單</h2>
+  <div class="cmp"><div><span class="k">若完全不避險</span><span class="v">${wan(unh)} 萬</span><span class="note">淨曝險部分以即期 ${spotAt.toFixed(2)} 結匯</span></div><div class="hi"><span class="k">實際收到（鎖匯 ${(h/nt*100).toFixed(0)}%）</span><span class="v safe">${wan(actual)} 萬</span><span class="note">多收 ${wan(actual-unh)} 萬</span></div></div>
+  <p class="note" style="margin:0">接單時以 30.50 報價，淨曝險部分預期 ${wan(quote)} 萬。實際少收 ${wan(quote-actual)} 萬，若未避險則少收 ${wan(quote-unh)} 萬。</p>
+  <button class="btn sec" data-act="restart">重新開始 Demo</button>
+ </section></div>`};
+
+/* ---------- AI chat ---------- */
+const CHAT={
+ home:{say:`早安，陳董事長。今天收到 3 張轉寄的美元訂單，合計 ${usd(GROSS)}，扣除美元進貨後淨曝險 ${usd(NET)}。目前全部未避險，新台幣每升值 1 元，約少收 NT$${wan(NET)} 萬。`,
+  chips:[["帶我去確認訂單",()=>go("read")],["我的匯率風險有多大？",()=>{say("我的匯率風險有多大？",`三張訂單會在 2027 年 1 至 3 月陸續收款。以淨曝險計算，新台幣升值 1 元約少收 NT$${wan(NET)} 萬，約占這批訂單毛利的 ${(NET/GP*100).toFixed(0)}%。若以訂單全額計算（曝險上限），則為 ${wan(GROSS)} 萬，約 ${(GROSS/GP*100).toFixed(0)}%。`);go("risk",true)}]]},
+ read:{say:"NL-2611 的付款條件原文是「T/T 60 days after B/L date」，以提單日起算。若 12/10 出貨，預計 2027-02-08 收款。請您確認這個欄位。",
+  chips:[["確認無誤",()=>act("confirm")],["為什麼信心只有 87%？",()=>say("為什麼信心只有 87%？","這份訂單以「B/L date」起算，和您過去常見的「出貨後」寫法不同，同一行還有預付款條款。我無法完全確定，因此請您確認，不會自行推測。")]]},
+ risk:{say:"我已扣除您以美元支付的原料進貨，只計算實際承擔的淨曝險。拖動左邊的升值情境，可以看到少收金額與占毛利的比例。這裡只呈現情境，不預測匯率。",
+  chips:[["如果升值 2 元呢？",()=>{S.move=2;say("如果升值 2 元呢？",`升值 2 元時，淨曝險少收約 NT$${wan(NET*2)} 萬，約占毛利 ${(NET*2/GP*100).toFixed(0)}%。若依建議鎖匯 ${S.hedge}%，少收金額可降到 NT$${wan((NET-planUsd())*2)} 萬。`)}],["為什麼要扣除美元進貨？",()=>say("為什麼要扣除美元進貨？","您以美元支付的原料，會和美元收入互相抵銷，匯率變動對這一部分沒有影響。只對淨曝險鎖匯，可以避免避險過度。")],["看買方付款風險",()=>go("pd")]]},
+ pd:{say:`我用機器學習模型預估各買方的付款風險。MX-0415 是首次交易的買方，風險最高（${pdOf(ORDERS[2]).toFixed(1)}%），但仍低於 ${REVIEW}% 的 RM 複核門檻。`,
+  chips:[["為什麼 MX-0415 較高？",()=>say("為什麼 MX-0415 較高？","主要因為首次交易、沒有歷史付款紀錄，且缺少公開財報評等，三項合計拉高約 9.3 個百分點。點選右側 SHAP 圖可以逐項查看。")],["這會如何影響建議？",()=>say("這會如何影響建議？","付款風險越高，訂單越可能延遲或取消，鎖匯比例就越低，以免遠期合約與實際收款不符。MX-0415 建議只鎖 25%，另外兩筆鎖 55%。付款風險也會作為週轉金預審的依據。")],["看避險建議",()=>go("plan")]]},
+ plan:{say:"建議依各訂單淨曝險與付款風險分 3 筆遠期外匯，整體約鎖 50%，並為 NL-2611 準備 NT$800 萬的出貨前週轉金。鎖匯金額不會超過淨曝險。",
+  chips:[["鎖 70% 會怎樣？",()=>{if(S.submitted){say("鎖 70% 會怎樣？","方案已送出，若要調整請 RM 協助。");return}S.hedge=70;say("鎖 70% 會怎樣？",`整體鎖 70% 時，升值 1 元的少收金額降到約 NT$${wan(NET-planUsd())} 萬。缺點是新台幣若反而貶值，鎖住的部分享受不到貶值的好處，訂單若取消，也需要處理到期的合約。`)}],
+   ["遠期外匯是什麼？",()=>say("遠期外匯是什麼？","就是現在先和銀行約定，未來某一天用固定匯率把美元換成新台幣。好處是收款時不論匯率如何變動，這部分的金額都已確定，代價是匯率往有利方向變動時，這部分也不會多賺。")],
+   ["送給 RM 確認",()=>act("submit")]]},
+ prog:{say:"方案已送到王經理的工作台。RM 確認適合度、授信核准後才會成交，這一步不會由我自動完成。",
+  chips:[["模擬 RM 完成確認",()=>act("rm")],["模擬收到 NL-2611 貨款",()=>act("settle")]]},
+ recon:{say:"收款時我會自動比對訂單、交割遠期、償還週轉金，並整理每筆訂單的匯率成績單。",
+  chips:[["重新開始 Demo",()=>act("restart")]]}
+};
+function say(q,a){if(q)S.chat.push({me:true,t:q});S.chat.push({me:false,t:a});render()}
+function intro(){if(!S.seen[S.page]){S.seen[S.page]=1;S.chat.push({me:false,t:CHAT[S.page].say})}}
+
+/* ---------- actions ---------- */
+let toastT;
+function toast(t){let el=document.querySelector(".toast");if(!el){el=document.createElement("div");el.className="toast";el.setAttribute("role","status");document.body.appendChild(el)}el.textContent=t;el.hidden=false;clearTimeout(toastT);toastT=setTimeout(()=>{el.hidden=true},2600)}
+function act(a){
+ if(a==="confirm"&&!S.confirmed){S.confirmed=true;addLog("協調 Agent","陳董事長確認 NL-2611 付款條件，交由曝險試算引擎",true);addLog("曝險試算引擎",`以即期 30.50 計算：訂單 ${usd(GROSS)}，扣除美元進貨 ${usd(COST)}，淨曝險 ${usd(NET)}`);addLog("付款風險模型",`完成 3 位買方評分：NL-2611 ${pdOf(ORDERS[0]).toFixed(1)}%、PR-7730 ${pdOf(ORDERS[1]).toFixed(1)}%、MX-0415 ${pdOf(ORDERS[2]).toFixed(1)}%`);toast("已確認，淨曝險與付款風險已更新");S.chat.push({me:false,t:"謝謝確認。三張訂單都已就緒，淨曝險與買方付款風險也算好了。"});go("risk",true);return}
+ if(a==="submit"&&!S.submitted){if(!S.confirmed){toast("請先確認 NL-2611 的付款條件");go("read");return}S.submitted=true;addLog("建議 Agent",`產生草案：遠期外匯鎖匯 ${(planUsd()/NET*100).toFixed(0)}%（依付款風險分配）、週轉金 NT$800 萬`);addLog("協調 Agent","草案送至 RM 工作台，等待適合度確認",true);toast("已送給王經理確認");go("prog",true);return}
+ if(a==="rm"){if(!S.submitted){toast("請先在「避險與融資」送出方案");go("plan");return}if(!S.executed){S.executed=true;addLog("RM 王經理","完成適合度確認與授信核准",true);addLog("協調 Agent","遠期外匯 3 筆成交，週轉金撥款排程");toast("RM 已確認，遠期外匯成交");S.chat.push({me:false,t:"王經理已確認，3 筆遠期外匯成交。總覽頁的未避險部位已更新。"})}render();return}
+ if(a==="settle"){if(!S.executed){toast("需要 RM 確認並成交後，才能模擬收款");return}S.settled=true;addLog("對帳 Agent","收到 US$480,000，比對 NL-2611 相符，交割遠期並償還週轉金");toast("貨款已入帳並完成對帳");go("recon",true);return}
+ if(a==="restart"){Object.assign(S,{page:"home",move:1,hedge:50,confirmed:false,submitted:false,executed:false,settled:false,chat:[],seen:{},log:S.log.slice(0,3),sel:"NL-2611",hl:null});render();return}
+}
+function go(p,keep){S.page=p;S.hl=null;render();document.getElementById("page").scrollIntoView({block:"start",behavior:"smooth"})}
+
+/* ---------- render ---------- */
+function render(){
+ intro();
+ const pg=PAGES.find(p=>p.id===S.page);
+ document.getElementById("nav").innerHTML=`<div class="grp">出口訂單副駕</div>`+PAGES.map(p=>`<button data-go="${p.id}" ${p.id===S.page?'aria-current="page"':''}><span class="ix">${p.ix}</span>${p.name}${p.id==="read"&&!S.confirmed?'<span class="badge">1</span>':''}</button>`).join("");
+ document.getElementById("crumb").textContent=pg.crumb;document.getElementById("title").textContent=pg.title;
+ document.getElementById("page").innerHTML=P[S.page]();
+ const app=document.getElementById("app");app.classList.toggle("noai",!S.ai);app.classList.toggle("aiopen",S.ai);
+ document.getElementById("aiToggle").setAttribute("aria-pressed",S.ai);
+ document.querySelectorAll(".tab").forEach(t=>t.setAttribute("aria-selected",t.dataset.tab===S.tab));
+ const body=document.getElementById("aibody");
+ body.innerHTML=S.tab==="chat"?S.chat.map(m=>`<div class="bub ${m.me?'me':'ai'}">${m.t}</div>`).join(""):
+  `<div class="log">${S.log.map(e=>{const l=LAYER[e.agent]||["llm","LLM"];return `<div class="e ${e.gate?'gate':''}"><span class="tm">${e.tm}</span><div><b>${e.agent}<span class="ly ${l[0]}">${l[1]}</span>${e.gate?'，人工關卡':''}</b><span>${e.text}</span></div></div>`}).join("")}</div><p class="note">每次讀單、試算、評分、建議都留存紀錄，供稽核使用。</p>`;
+ body.scrollTop=body.scrollHeight;
+ document.getElementById("chips").innerHTML=S.tab==="chat"?CHAT[S.page].chips.map((c,i)=>`<button class="chip-btn" data-chip="${i}">${c[0]}</button>`).join(""):"";
+ const idx=PAGES.findIndex(p=>p.id===S.page);
+ document.getElementById("tstep").textContent=`DEMO 導覽 ${idx+1} / ${PAGES.length}`;
+ document.getElementById("tbars").innerHTML=PAGES.map((_,i)=>`<i class="${i<=idx?'on':''}"></i>`).join("");
+ document.getElementById("ttext").innerHTML=`<b>${TOUR[S.page][0]}</b>${TOUR[S.page][1]}`;
+ document.getElementById("tprev").disabled=idx===0;
+ document.getElementById("tnext").textContent=idx===PAGES.length-1?"重新開始":"下一步";
+}
+function tourNext(){const i=PAGES.findIndex(p=>p.id===S.page);
+ if(S.page==="read"&&!S.confirmed){act("confirm");return}
+ if(S.page==="plan"&&!S.submitted){act("submit");return}
+ if(S.page==="prog"&&!S.executed){act("rm");return}
+ if(S.page==="prog"&&!S.settled){act("settle");return}
+ if(i===PAGES.length-1){act("restart");return}
+ go(PAGES[i+1].id)}
+
+document.addEventListener("click",e=>{
+ const b=e.target.closest("button,[data-hl]");if(!b)return;
+ if(b.dataset.go){go(b.dataset.go);return}
+ if(b.dataset.act){act(b.dataset.act);return}
+ if(b.dataset.sel){S.sel=b.dataset.sel;render();return}
+ if(b.dataset.chip!==undefined){CHAT[S.page].chips[+b.dataset.chip][1]();return}
+ if(b.dataset.tab){S.tab=b.dataset.tab;render();return}
+ if(b.dataset.hl){S.hl=S.hl===b.dataset.hl?null:b.dataset.hl;render();return}
+ if(b.id==="aiToggle"){S.ai=!S.ai;render();return}
+ if(b.id==="tnext"){tourNext();return}
+ if(b.id==="tprev"){const i=PAGES.findIndex(p=>p.id===S.page);if(i>0)go(PAGES[i-1].id);return}
+});
+document.addEventListener("input",e=>{
+ if(e.target.id==="move"){S.move=+e.target.value;render();document.getElementById("move").focus()}
+ if(e.target.id==="hedge"){S.hedge=+e.target.value;render();document.getElementById("hedge").focus()}
+});
+const h=(location.hash||"").slice(1);if(PAGES.some(p=>p.id===h))S.page=h;
+if(window.matchMedia("(max-width:1240px)").matches)S.ai=false;
+render();
+</script>
+
